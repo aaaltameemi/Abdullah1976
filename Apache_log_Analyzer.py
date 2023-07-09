@@ -25,10 +25,10 @@ for entry in apache_log_entries:
     #print(entry)
     #create ip address for apache_log_entries
     ip_address = entry[0:15:1]
-    if int(return_code) >= 500:
-        writable_file.writelines(f"{ip_address}{return_code}")
-    elif int(return_code) >=400:
-        print(f"{ip_address} -{return_code}")
+    
+    writable_file.writelines(f"{ip_address}{return_code}")
+    
+    print(f"{ip_address} -{return_code}")
 
 
 
