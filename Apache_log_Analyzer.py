@@ -6,49 +6,59 @@
 #Author email:aaaltameemi@madisoncollege.com  
 
 '''
+import sys
 #create welcome message about the script and print it to the screen .
 welcome_message ="welcome to Apache analyzer!"
 print(welcome_message)
-#user_message=input("would like to continue?please enter your 'y' for yes amd 'n for No: ")
-#print(user_message)
-#create apache log with multiple lines
-#apache_log=
-# opning the log file that want to process
-apache_log_file=open('m4-access.log' , 'r')
-#reading the log file 
-apache_log= apache_log_file.read()
+if len(sys.argv) > 1:
+    user_message = sys.argv[1]
+else:
 
-#print(apache_log)
-#open text file 
-apache_log_analysis = open('apache_analysis.txt', 'w')
-#spliting entry log 
-apache_log_entries = apache_log.split( '\n')
-#print(apache_log_entries)
+    user_message =input("would like to continue?please enter your 'y' for yes amd 'n for No: ")
+accptible_message =['y','yeah','yes']
+if user_message.lower() in accptible_message:
+    #print(user_message)
+    #create apache log with multiple lines
+    #apache_log=
+    # opning the log file that want to process
+    apache_log_file=open('m5-access.log' , 'r')
+    #reading the log file 
+    apache_log= apache_log_file.read()
 
-#looping through each entry in the list of log apach_log_entries
-for entry in apache_log_entries:
-   # print(entry)
-    #grapping the first 16 character og the log entry whhich is IP address
-    #ip_address = entry[0:15:1]
-    
-    #split the string to get the return code
-    apache_log_entry_items = entry.split(' ')
-    #extract the IP address
-    ip_address = apache_log_entry_items[0]
-    return_code = apache_log_entry_items[8]
-    summary=(f"{ip_address} - {return_code}")
-    print(summary)
-    #write to the txt file 
-    apache_log_analysis.write(summary + "\n")
+    #print(apache_log)
+    #open text file 
+    apache_log_analysis = open('apache_analysis.txt', 'w')
+    #spliting entry log 
+    apache_log_entries = apache_log.split( '\n')
+    #print(apache_log_entries)
 
-#close the text file to prevent overwritten
-apache_log_analysis.closed()  
+    #looping through each entry in the list of log apach_log_entries
+    for entry in apache_log_entries:
+    # print(entry)
+        #grapping the first 16 character og the log entry whhich is IP address
+        #ip_address = entry[0:15:1]
+        
+        #split the string to get the return code
+        apache_log_entry_items = entry.split(' ')
+        #extract the IP address and return code
+        ip_address = apache_log_entry_items[0]
+        return_code = apache_log_entry_items[8]
+        summary=(f"{ip_address} - {return_code}")
+        if return_code >= '400' :
+            print(summary)
+        if return_code >= '500':
+            apache_log_analysis.write(summary + "\n")
+
+    #close the text file to prevent overwritten
+    apache_log_analysis.closed()  
+else :
+    print('You chose not to continue and exiting the programe ...')
 
 
-    
-    
+        
+        
 
-                    
+                        
 
 
 
