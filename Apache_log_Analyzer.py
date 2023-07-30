@@ -8,15 +8,26 @@
 import sys
 import subprocess
 import argparse
+import requests
+import bs4
 
 # create a new function using subprocess module
 def IPAddressCount(fname):
     # we used capture_output , text attributes here to get the result as a string to save it on file later
     return subprocess.run(f"cat {fname} | cut -d ' ' -f1 | sort -n | uniq -c | sort -n | tail -n5",shell=True,capture_output=True,text=True)
 
+# create a new function to use requests module, it takes single argument 
+def IPLookup(ip_address):
+    # Print the Response from the Function
+    print(f"https://tools.keycdn.com/geo?host={ip_address}")
+
+    # Capture the  http response , and return that response it text manner
+    returned_data = requests.get(f"https://tools.keycdn.com/geo?host={ip_address}")
+    return returned_data.text
 
 def main():
  
+    
     # Create an ArgumentParser instance
     parser = argparse.ArgumentParser()
     # Add a required 'filename' argument with short and long flags
@@ -24,17 +35,35 @@ def main():
     
     # Parse arguments
     args = parser.parse_args()
-    print("Analyze an apache web log. We will look to see if there is anyone trying to hack our website")
 
     # call the IPAddressCount function and access 'filename' argument value
     entryLogs = IPAddressCount(args.filename)
 
-    # printing out the result of function 
-    print(entryLogs.stdout)
+    # splitted strings 
+    returned_logs = entryLogs.stdout.split("\n")
+
+    # clear most of the tabs from every line
+    returned_logs = [x.strip() for x in returned_logs if x != ""]
+
+    # get the last element and split it with a space 
+    most_requested_ip = returned_logs[-1].split(" ")
+
+    print("Analyze an apache web log. We will look to see if there is anyone trying to hack our website")
+    print(most_requested_ip[1])
+
+    # Capture the response in a variable
+    response = IPLookup(most_requested_ip[1])
+    
+    # print the first 250 characters of the response
+    print(response[:250])
 
     # create file and add to it the result of IPAddressCount    
     with open("apache_analysis.txt","w") as file:
         file.write(entryLogs.stdout) # stdout to get the output from the command 
+    
+    # Use Beautiful Soup to Get Information about that IP
+    myHtml = bs4.BeautifulSoup(response,features="html.parser")
+    print(myHtml.find_all("dd",class_="col-8 text-monospace")[1].text)
 
 
 # to run main function only when called directly
