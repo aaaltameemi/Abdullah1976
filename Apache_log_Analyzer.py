@@ -10,6 +10,7 @@ import subprocess
 import argparse
 import requests
 import bs4
+import json
 
 # create a new function using subprocess module
 def IPAddressCount(fname):
@@ -19,11 +20,11 @@ def IPAddressCount(fname):
 # create a new function to use requests module, it takes single argument 
 def IPLookup(ip_address):
     # Print the Response from the Function
-    print(f"https://tools.keycdn.com/geo?host={ip_address}")
+    print(f"http://ipinfo.io/{ip_address}/json")
 
     # Capture the  http response , and return that response it text manner
-    returned_data = requests.get(f"https://tools.keycdn.com/geo?host={ip_address}")
-    return returned_data.text
+    returned_data = requests.get(f"http://ipinfo.io/{ip_address}/json").text
+    return returned_data
 
 def main():
  
@@ -53,17 +54,24 @@ def main():
 
     # Capture the response in a variable
     response = IPLookup(most_requested_ip[1])
-    
+
+
     # print the first 250 characters of the response
-    print(response[:250])
+    # print(response[:250])
+
+    # got response as text , then Parse and print the response
+    response = json.loads(response)
+    for k in response:
+        if k == "city" or k == "org":
+            print(f"... IP {k.upper()} : {response[k]}")
 
     # create file and add to it the result of IPAddressCount    
     with open("apache_analysis.txt","w") as file:
         file.write(entryLogs.stdout) # stdout to get the output from the command 
     
     # Use Beautiful Soup to Get Information about that IP
-    myHtml = bs4.BeautifulSoup(response,features="html.parser")
-    print(myHtml.find_all("dd",class_="col-8 text-monospace")[1].text)
+    # myHtml = bs4.BeautifulSoup(response,features="html.parser")
+    # print(myHtml.find_all("dd",class_="col-8 text-monospace")[1].text)
 
 
 # to run main function only when called directly
