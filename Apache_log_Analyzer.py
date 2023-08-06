@@ -20,36 +20,54 @@ def IPAddressCount(fname):
 # create a new function to use requests module, it takes single argument 
 def IPLookup(ip_address):
     # Print the Response from the Function
-    print(f"http://ipinfo.io/{ip_address}/json")
+    # open the .credentials-vt file , and get the value of your api-key
+    with open(".credentials-vt",'r') as file:
+        api_key = file.readline().strip()
+        # split the line by = to get the value of the variable
+        api_key = api_key.split("=")[1]
 
+    # dictionary with a key of ‘x-apikey’ and a value of your api key from Virus Total
+    headerVariable = {
+        'x-apikey':api_key
+    }
+    print(f"https://virustotal.com/api/v3/ip_addressses/{ip_address}")    
     # Capture the  http response , and return that response it text manner
-    returned_data = requests.get(f"http://ipinfo.io/{ip_address}/json").text
+    # Add the header argument to your url request.
+    returned_data = requests.get(f"https://virustotal.com/api/v3/ip_addresses/{ip_address}",headers=headerVariable).text
     return returned_data
 
 def main():
- 
     
     # Create an ArgumentParser instance
     parser = argparse.ArgumentParser()
     # Add a required 'filename' argument with short and long flags
-    parser.add_argument('-f', '--filename', type=str, required=True, help='Enter an apache name file to process')
-    
+    parser.add_argument('-f', '--filename', type=str, required=False, help='Enter an apache name file to process')
+    # Add a continue flag argument with choices of y , n 
+    parser.add_argument('-c', '--continues', choices=['y', 'n'], default="n", help='Choose yes (y) or no (n)')
     # Parse arguments
     args = parser.parse_args()
-
-    # call the IPAddressCount function and access 'filename' argument value
-    entryLogs = IPAddressCount(args.filename)
-
+    if args.filename:
+        # call the IPAddressCount function and access 'filename' argument value
+        entryLogs = IPAddressCount(args.filename)
+    # check if continues argument its equal to y , it's read the m5-access.log
+    elif args.continues == 'y':
+        entryLogs = IPAddressCount("m5-access.log")
+        print("This script will read Apache log entries and analyze them.\n\nYou chose y, so will continute")
+    
+    # it ends the program if the user passed n.
+    else:
+        print("You chose n to end the program end bye.")
+        sys.exit()
+    
     # splitted strings 
     returned_logs = entryLogs.stdout.split("\n")
-
     # clear most of the tabs from every line
     returned_logs = [x.strip() for x in returned_logs if x != ""]
 
     # get the last element and split it with a space 
     most_requested_ip = returned_logs[-1].split(" ")
 
-    print("Analyze an apache web log. We will look to see if there is anyone trying to hack our website")
+    # print("Analyze an apache web log. We will look to see if there is anyone trying to hack our website")
     print(most_requested_ip[1])
 
     # Capture the response in a variable
@@ -61,9 +79,14 @@ def main():
 
     # got response as text , then Parse and print the response
     response = json.loads(response)
-    for k in response:
-        if k == "city" or k == "org":
-            print(f"... IP {k.upper()} : {response[k]}")
+    # a single line that prints the dictionary
+    # print(json.dumps(response,indent=4))
+
+    # find information about the IP Address
+    print("Bitdefender category: " + response['data']['attributes']['last_analysis_results']['BitDefender']['category'])
+    # for k in response:
+        # if k == "city" or k == "org":
+        #     print(f"... IP {k.upper()} : {response[k]}")
 
     # create file and add to it the result of IPAddressCount    
     with open("apache_analysis.txt","w") as file:
@@ -72,9 +95,8 @@ def main():
     # Use Beautiful Soup to Get Information about that IP
     # myHtml = bs4.BeautifulSoup(response,features="html.parser")
     # print(myHtml.find_all("dd",class_="col-8 text-monospace")[1].text)
-
+    
 
 # to run main function only when called directly
 if __name__ == '__main__':
     main()
-
